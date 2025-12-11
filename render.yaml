@@ -7,11 +7,9 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11
-    plan: free
 
   - type: web
     name: geometria-frontend
     runtime: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
-    plan: free
