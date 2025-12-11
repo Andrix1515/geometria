@@ -24,7 +24,8 @@ export default function App() {
 
   async function fetchSim() {
     try {
-      const res = await fetch('http://localhost:8000/api/simulate', {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+      const res = await fetch(`${apiUrl}/api/simulate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: conicType, params }),
