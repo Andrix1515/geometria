@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { io } from 'socket.io-client'
 import Canvas2DPro from './components/Canvas2DPro'
 import AdvancedControlPanel from './components/AdvancedControlPanel'
 import DynamicNarrativePanel from './components/DynamicNarrativePanel'
 import TimelineScenarios from './components/TimelineScenarios'
 import Paraboloid3D from './components/Paraboloid3D'
 import HelpModal from './components/HelpModal'
+
+const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
+const socket = io(apiUrl);
 
 export default function App() {
   const [conicType, setConicType] = useState('parabola')
@@ -19,12 +23,36 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('canvas') // canvas | scenarios
 
   useEffect(() => {
+    // --- Configuración de Socket.IO ---
+    socket.on('connect', () => {
+      console.log('Socket.IO Conectado:', socket.id);
+      // Ejemplo de cómo emitir un evento al backend tras la conexión
+      socket.emit('simulation_update', { client: 'ReactApp', status: 'connected' });
+    });
+
+    socket.on('simulation_response', (data) => {
+      console.log('Respuesta de simulación en tiempo real:', data);
+      // Aquí podrías actualizar un estado para mostrar datos en vivo
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Socket.IO Desconectado');
+    });
+
+    // Limpieza al desmontar el componente
+    return () => {
+      socket.off('connect');
+      socket.off('simulation_response');
+      socket.off('disconnect');
+    };
+  }, []);
+
+  useEffect(() => {
     fetchSim()
   }, [conicType, params])
 
   async function fetchSim() {
     try {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
       const res = await fetch(`${apiUrl}/api/simulate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

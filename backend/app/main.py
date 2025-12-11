@@ -14,12 +14,19 @@ from fastapi.responses import StreamingResponse
 from fastapi.responses import RedirectResponse
 import matplotlib.pyplot as plt
 
+import socketio
 from .conics import (
     parabola_points, ellipse_points, hyperbola_points,
     simulate_parabola_rays, simulate_ellipse_rays, simulate_hyperbola_rays
 )
 
+# Configuración del servidor Socket.IO
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins="*")
+
 app = FastAPI(title="Cónicas Electromagnéticas API")
+
+# Envolver la aplicación FastAPI con el middleware de Socket.IO
+app = socketio.ASGIApp(sio, other_asgi_app=app)
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,6 +35,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Eventos de Socket.IO
+@sio.event
+async def connect(sid, environ):
+    print(f"Cliente conectado: {sid}")
+
+@sio.event
+async def disconnect(sid):
+    print(f"Cliente desconectado: {sid}")
+
+@sio.event
+async def simulation_update(sid, data):
+    # Aquí puedes manejar actualizaciones en tiempo real
+    print(f"Evento 'simulation_update' recibido de {sid} con datos: {data}")
+    await sio.emit('simulation_response', {'status': 'received', 'data': data})
 
 class ConicRequest(BaseModel):
     type: str

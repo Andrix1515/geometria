@@ -7,3 +7,4 @@ matplotlib
 pillow
 scipy
 python-dotenv
+python-socketio
